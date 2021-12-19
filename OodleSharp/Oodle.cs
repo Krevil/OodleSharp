@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -6,19 +6,21 @@ namespace OodleSharp
 {
     public static class Oodle
     {
-        [DllImport("oo2core_3_win64.dll")]
-        private static extern int OodleLZ_Compress(OodleFormat format, byte[] buffer, long bufferSize, byte[] outputBuffer, OodleCompressionLevel level, uint unused1, uint unused2, uint unused3);
+        [DllImport("oo2core_8_win64.dll")]
+        private static extern int OodleLZ_Compress(OodleFormat format, byte[] buffer, long bufferSize, byte[] outputBuffer, OodleCompressionLevel level, uint options, uint offs, uint unk, byte[] scratchBuffer, uint scratchBufferSize);
 
-        [DllImport("oo2core_3_win64.dll")]
+        [DllImport("oo2core_8_win64.dll")]
         private static extern int OodleLZ_Decompress(byte[] buffer, long bufferSize, byte[] outputBuffer, long outputBufferSize,
             uint a, uint b, ulong c, uint d, uint e, uint f, uint g, uint h, uint i, uint threadModule);
 
         public static byte[] Compress(byte[] buffer, int size, OodleFormat format, OodleCompressionLevel level)
         {
+            byte[] skBuffer = new byte[0];
+            uint skBufferSize = (uint)skBuffer.Length;
             uint compressedBufferSize = GetCompressionBound((uint)size);
             byte[] compressedBuffer = new byte[compressedBufferSize];
 
-            int compressedCount = OodleLZ_Compress(format, buffer, size, compressedBuffer, level, 0, 0, 0);
+            int compressedCount = OodleLZ_Compress(format, buffer, size, compressedBuffer, level, 0, 0, 0, skBuffer, skBufferSize);
 
             byte[] outputBuffer = new byte[compressedCount];
             Buffer.BlockCopy(compressedBuffer, 0, outputBuffer, 0, compressedCount);
@@ -37,7 +39,7 @@ namespace OodleSharp
             }
             else if (decompressedCount < uncompressedSize)
             {
-                return decompressedBuffer.Take(decompressedCount).ToArray();
+                return decompressedBuffer;
             }
             else
             {
